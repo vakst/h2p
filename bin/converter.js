@@ -1,4 +1,4 @@
-/*
+/**
  * H2P - HTML to PDF PHP library
  *
  * JS Converter File
@@ -44,74 +44,32 @@ function errorHandler(e) {
 }
 
 try {
-    if (args.length < 2) {
+    if (args.length < 3) {
         throw 'You must pass the URI and the Destination param!';
     }
 
-    // Take all options in one JSON param
-    var options = JSON.parse(args[1]);
+    var uri = args[1];
+    var destination = args[2];
+    var format = args[3] || 'A4';
+    var orientation = args[4] || 'portrait';
+    var border = args[5] || '1cm';
+    var cookie = args[6] || '';
 
-    page.customHeaders = options.request.headers;
-    phantom.cookies = options.request.cookies;
+    page.customHeaders = {
+        'User-Agent': 'PhantomJS',
+        'Cookie': cookie
+    };
 
-    page.open(options.request.uri + (options.request.method == 'GET' ? '?' + options.request.params : ''), options.request.method, options.request.params, function (status) {
+    page.viewportSize = { width: 1280, height: 800 };
+
+    page.open(uri, function (status) {
         try {
             if (status !== 'success') {
-                throw 'Unable to access the URI! (Make sure you\'re using a .html extension if you\'re trying to use a local file)';
+                throw 'Unable to access the URI!';
             }
 
-            var paperSize = {
-                format: options.format,
-                orientation: options.orientation,
-                border: options.border
-            };
-
-            // If we enable custom footer per page, evaluate it
-            if (options.allowParseCustomFooter || options.allowParseCustomHeader) {
-                var customOptions = page.evaluate(function() {
-                    return (typeof _h2p_options == "object"
-                        && (typeof _h2p_options.footer == "object" || typeof _h2p_options.header == "object"))
-                        ? _h2p_options : {};
-                });
-            }
-
-            if (options.allowParseCustomFooter && customOptions.footer) {
-                options.footer = options.footer || { height: '1cm', content: '' }; // Avoid some errors
-                options.footer = {
-                    height: customOptions.footer.height || options.footer.height,
-                    content: customOptions.footer.content || options.footer.content
-                }
-            }
-
-            if (options.allowParseCustomHeader && customOptions.header) {
-                options.header = options.header || { height: '1cm', content: '' }; // Avoid some errors
-                options.header = {
-                    height: customOptions.header.height || options.header.height,
-                    content: customOptions.header.content || options.header.content
-                }
-            }
-
-            if (options.footer) {
-                paperSize.footer = {
-                    height: options.footer.height,
-                    contents: phantom.callback(function(pageNum, totalPages) {
-                        return options.footer.content.replace('{{pageNum}}', pageNum).replace('{{totalPages}}', totalPages);
-                    })
-                }
-            }
-
-            if (options.header) {
-                paperSize.header = {
-                    height: options.header.height,
-                    contents: phantom.callback(function(pageNum, totalPages) {
-                        return options.header.content.replace('{{pageNum}}', pageNum).replace('{{totalPages}}', totalPages);
-                    })
-                }
-            }
-
-            page.paperSize = paperSize;
-            page.zoomFactor = options.zoomFactor;
-            page.render(options.destination, { format: 'pdf' });
+            page.paperSize = { format: format, orientation: orientation, border: border };
+            page.render(destination, { format: 'pdf' });
 
             console.log(JSON.stringify({
                 success: true,

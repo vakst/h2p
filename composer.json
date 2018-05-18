@@ -1,6 +1,6 @@
 {
     "name": "kriansa/h2p",
-    "type": "library",
+    "type": "vcs",
     "description": "A simple library to convert HTML files to PDF using PhantomJS",
     "keywords": ["html", "pdf", "phantomjs"],
     "homepage": "http://github.com/kriansa/h2p",
